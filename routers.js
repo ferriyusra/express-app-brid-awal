@@ -75,7 +75,7 @@ routers.get('/product/:id', async (req, res) => {
 })
 
 // routes untuk tambah produk gunakan url singular
-routers.post('/product', async (req, res) => {
+routers.post('/product', multer().none(), async (req, res) => {
     if (client.isConnected()) {
 
         // kode menambah data product
@@ -94,36 +94,86 @@ routers.post('/product', async (req, res) => {
                 status: 'success',
                 message: 'tambah product success'
             })
+        } else {
+            res.send({
+                status: 'warning',
+                message: 'tambah product gagal'
+            })
         }
-        // sampai sini
-
-
     } else {
-        res.send('koneksi database gagal')
+        res.send({
+            status: 'error',
+            message: 'koneksi database gagal'
+        })
     }
 })
 
 // routers untuk ubah produk gunakan url singular
-routers.put('/product/:id', (req, res) => {
+routers.put('/product/:id', multer().none(), async (req, res) => {
     if (client.isConnected()) {
-        const db = client.db('latihan_awal_bukureactid')
-
         // kode mengupdate data product
-        res.send('mengupdate list products')
+        const { name, price, stock, status } = req.body
+        const db = client.db('latihan_awal_bukureactid')
+        const result = await db.collection('products').updateOne(
+            { _id: ObjectId(req.params.id) },
+            {
+                $set: {
+                    name: name,
+                    price: price,
+                    stock: stock,
+                    status: status
+                }
+            }
+        )
+
+        if (result.matchedCount == 1) {
+            res.send({
+                status: 'success',
+                message: 'update product success'
+            })
+        } else {
+            res.send({
+                status: 'warning',
+                message: 'update product gagal'
+            })
+        }
+
     } else {
-        res.send('koneksi database gagal')
+        res.send({
+            status: 'error',
+            message: 'koneksi database gagal'
+        })
     }
 })
 
 // routers untuk delete produk gunakan url singular
-routers.delete('/product/:id', (req, res) => {
+routers.delete('/product/:id', async (req, res) => {
     if (client.isConnected()) {
-        const db = client.db('latihan_awal_bukureactid')
-
         // kode menghapus data products
-        res.send('menampilkan data product')
+        const db = client.db('latihan_awal_bukureactid')
+        const result = await db.collection('products').deleteOne(
+            {
+                _id: ObjectId(req.params.id)
+            }
+        )
+
+        if (result.deletedCount == 1) {
+            res.send({
+                status: 'success',
+                message: 'delete product success'
+            })
+        } else {
+            res.send({
+                status: 'warning',
+                message: 'delete product gagal'
+            })
+        }
+
     } else {
-        res.send('koneksi database gagal')
+        res.send({
+            status: 'error',
+            message: 'koneksi database gagal'
+        })
     }
 })
 
