@@ -8,91 +8,75 @@ const upload = multer({ dest: 'public' })
 const routers = express.Router()
 
 // kode koneksi db mongo
-const client = require('./connection')
+// const client = require('./connection')
+require('./connection')
+const Product = require('./Product')
 const ObjectId = require('mongodb').ObjectId
 
 // routes ambil semua data produk
 routers.get('/products', async (req, res) => {
-    if (client.isConnected()) {
 
-        // kode menampilkan list products
-        const db = client.db('latihan_awal_bukureactid')
-        const products = await db.collection('products').find().toArray()
+    // kode menampilkan list products
+    // const db = client.db('latihan_awal_bukureactid')
+    const products = await Product.find()
 
-        if (products.length > 0) {
-            res.send({
-                status: 'success',
-                message: 'list products ditemukan',
-                data: products
-            })
-        } else {
-            res.send({
-                status: 'success',
-                message: 'list products tidak ditemukan',
-            })
-        }
-
+    if (products.length > 0) {
+        res.send({
+            status: 'success',
+            message: 'list products ditemukan',
+            data: products
+        })
     } else {
         res.send({
-            staus: 'error',
-            message: 'koneksi database gagal'
+            status: 'success',
+            message: 'list products tidak ditemukan',
         })
     }
+
 })
 
 
 // routes untuk mengambil single produk gunakan singular
 routers.get('/product/:id', async (req, res) => {
-    if (client.isConnected()) {
 
-        // kode menampilkan single products
-        const db = client.db('latihan_awal_bukureactid')
-        const product = await db.collection('products').findOne({ _id: ObjectId(req.params.id) })
+    // kode menampilkan single products
+    // const db = client.db('latihan_awal_bukureactid')
+    const product = await Product.findById(req.params.id)
 
-
-        if (product) {
-            res.send({
-                status: 'success',
-                message: 'data single product ditemukan',
-                data: product
-            })
-        } else {
-            res.send({
-                status: 'error',
-                message: 'data single product tidak ditemukan'
-            })
-        }
-
-
-
+    if (product) {
+        res.send({
+            status: 'success',
+            message: 'data single product ditemukan',
+            data: product
+        })
     } else {
         res.send({
             status: 'error',
-            message: 'koneksi database gagal'
+            message: 'data single product tidak ditemukan'
         })
-
     }
+
 })
 
 // routes untuk tambah produk gunakan url singular
 routers.post('/product', multer().none(), async (req, res) => {
-    if (client.isConnected()) {
 
-        // kode menambah data product
-        const { name, price, stock, status } = req.body
-        const db = client.db('latihan_awal_bukureactid')
+    // kode menambah data product
+    const { name, price, stock, status } = req.body
 
-        const result = await db.collection('products').insertOne({
+    try {
+        const product = await Product.create({
             name: name,
             price: price,
             stock: stock,
             status: status
         })
 
-        if (result.insertedCount == 1) {
+        if (product) {
             res.send({
                 status: 'success',
-                message: 'tambah product success'
+                message: 'tambah product success',
+                data: product
             })
         } else {
             res.send({
@@ -100,81 +84,85 @@ routers.post('/product', multer().none(), async (req, res) => {
                 message: 'tambah product gagal'
             })
         }
-    } else {
+
+    } catch (error) {
         res.send({
             status: 'error',
-            message: 'koneksi database gagal'
+            message: error.message
         })
     }
+
 })
 
 // routers untuk ubah produk gunakan url singular
 routers.put('/product/:id', multer().none(), async (req, res) => {
-    if (client.isConnected()) {
-        // kode mengupdate data product
-        const { name, price, stock, status } = req.body
-        const db = client.db('latihan_awal_bukureactid')
-        const result = await db.collection('products').updateOne(
-            { _id: ObjectId(req.params.id) },
+    // kode mengupdate data product
+    const { name, price, stock, status } = req.body
+    try {
+        const result = await Product.updateOne(
+            { _id: req.params.id },
             {
-                $set: {
-                    name: name,
-                    price: price,
-                    stock: stock,
-                    status: status
-                }
-            }
+                name: "",
+                price: price,
+                stock: stock,
+                status: status
+            },
+            { runValidators: true }
         )
-
-        if (result.matchedCount == 1) {
+        if (result.ok == 1) {
             res.send({
                 status: 'success',
-                message: 'update product success'
+                message: 'update product success',
+                data: result
             })
         } else {
             res.send({
                 status: 'warning',
-                message: 'update product gagal'
+                message: 'update product gagal',
+                data: result
             })
         }
-
-    } else {
+    } catch (error) {
         res.send({
             status: 'error',
-            message: 'koneksi database gagal'
+            message: error.message
         })
     }
 })
 
+
 // routers untuk delete produk gunakan url singular
 routers.delete('/product/:id', async (req, res) => {
-    if (client.isConnected()) {
-        // kode menghapus data products
-        const db = client.db('latihan_awal_bukureactid')
-        const result = await db.collection('products').deleteOne(
+
+    // kode menghapus data products
+    try {
+        const result = await Product.deleteOne(
             {
                 _id: ObjectId(req.params.id)
             }
         )
-
         if (result.deletedCount == 1) {
             res.send({
                 status: 'success',
-                message: 'delete product success'
+                message: 'delete product success',
+                data: result
             })
         } else {
             res.send({
                 status: 'warning',
-                message: 'delete product gagal'
+                message: 'delete product gagal',
+                data: result
             })
         }
-
-    } else {
+    } catch (error) {
         res.send({
             status: 'error',
-            message: 'koneksi database gagal'
+            message: error.message
         })
-    }
+    } r
+
+
+
 })
 
 
