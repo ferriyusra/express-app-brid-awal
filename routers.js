@@ -102,7 +102,7 @@ routers.put('/product/:id', multer().none(), async (req, res) => {
         const result = await Product.updateOne(
             { _id: req.params.id },
             {
-                name: "",
+                name: name,
                 price: price,
                 stock: stock,
                 status: status
